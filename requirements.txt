@@ -33,7 +33,6 @@ typing_extensions==4.15.0
 ultralytics==8.4.45
 ultralytics-thop==2.0.19
 urllib3==2.6.3
-ultralytics==8.1.0
 streamlit==1.30.0
 opencv-python-headless==4.8.0.74
 streamlit-webrtc==0.47.1
