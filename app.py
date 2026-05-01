@@ -1,45 +1,40 @@
 import streamlit as st
-import cv2
 from ultralytics import YOLO
-import numpy as np
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
+import av # Isse video frames handle hote hain link par
 
 # Page Config
 st.set_page_config(page_title="AI Object Detector", layout="wide")
 st.title("🚀 Real-Time Object Detection (YOLOv8)")
-st.write("Deep Learning model use karke objects pehchane!")
 
 # Load Model
-@st.cache_resource # Isse model baar baar load nahi hoga (Performance boost)
+@st.cache_resource
 def load_model():
     return YOLO('yolov8n.pt')
 
 model = load_model()
 
-# Sidebar Settings
-conf_threshold = st.sidebar.slider("Confidence Threshold", 0.0, 1.0, 0.5)
+# Logic for processing video frames from Browser
+class VideoProcessor(VideoProcessorBase):
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24") # Browser se frame lena
 
-# Camera Logic
-run = st.checkbox('Start Webcam')
-FRAME_WINDOW = st.image([]) # Khali jagah jahan video dikhegi
-
-camera = cv2.VideoCapture(0)
-
-while run:
-    _, frame = camera.read()
-    if frame is not None:
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) # Streamlit RGB use karta hai
+        # YOLO Inference
+        results = model.predict(img, conf=0.5)
         
-        # Inference
-        results = model.predict(frame, conf=conf_threshold)
-        
-        # Plot results
+        # Annotate (Box banana)
         annotated_frame = results[0].plot()
-        
-        # Display in Streamlit app
-        FRAME_WINDOW.image(annotated_frame)
-    else:
-        st.error("Camera nahi mil raha. Check permissions!")
-        break
-else:
-    st.write('Webcam Stopped')
-    camera.release()
+
+        return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
+
+# UI - Yahan se camera start hoga
+st.write("Niche 'Start' button par click karein aur camera allow karein.")
+
+webrtc_streamer(
+    key="object-detection",
+    video_processor_factory=VideoProcessor,
+    rtc_configuration={ # Ye part cloud par camera connectivity ke liye zaroori hai
+        "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+    }
+)
+
