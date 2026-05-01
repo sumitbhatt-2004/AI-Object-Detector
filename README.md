@@ -1,4 +1,4 @@
-**🚀 Real-Time AI Object Detector (YOLOv8)******************
+**🚀 Real-Time AI Object Detector (YOLOv8)**
 
 This project implements a real-time object detection system using the YOLOv8 (You Only Look Once) architecture. It is designed to identify and track multiple objects within a live video stream with high precision and low latency.
 
